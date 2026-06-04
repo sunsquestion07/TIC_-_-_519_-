@@ -61,7 +61,7 @@ names = ['Послідовність 1', 'Послідовність 2', 'Пос
          'Послідовність 5', 'Послідовність 6', 'Послідовність 7', 'Послідовність 8']
 
 # Збереження послідовностей у файл
-with open('LosslessCompression/sequence.txt', 'w', encoding='utf-8') as f:
+with open('sequence.txt', 'w', encoding='utf-8') as f:
     for i, seq in enumerate(sequences, 1):
         f.write(f"Послідовність {i}: {seq}\n")
         f.write(f"Розмір: {len(seq)} байт\n\n")
@@ -116,7 +116,7 @@ for seq, name in zip(sequences, names):
 # ЗБЕРЕЖЕННЯ РЕЗУЛЬТАТІВ У ФАЙЛ
 # =====================================================
 
-with open('LosslessCompression/results_sequence.txt', 'w', encoding='utf-8') as f:
+with open('results_sequence.txt', 'w', encoding='utf-8') as f:
     for res in results:
         f.write(f"{res['name']}: {res['sequence']}\n")
         f.write(f"Розмір послідовності: {res['size']} байт\n")
