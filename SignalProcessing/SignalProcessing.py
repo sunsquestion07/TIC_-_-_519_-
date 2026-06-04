@@ -140,3 +140,117 @@ plt.title('Залежність SNR від кроку дискретизації
 plt.grid(True)
 plt.savefig('figures/snr_vs_dt.png', dpi=600)
 plt.show()
+# =====================================================
+# ПРАКТИЧНА РОБОТА №4 - КВАНТУВАННЯ
+# =====================================================
+
+levels = [4, 16, 64, 256]
+
+quantized_signals = []
+variances_q = []
+snr_values_q = []
+
+for M in levels:
+    # Крок квантування
+    delta = (np.max(filtered_signal) - np.min(filtered_signal)) / (M - 1)
+
+    # Квантування сигналу
+    quantized_signal = delta * np.round(filtered_signal / delta)
+    quantized_signals.append(quantized_signal)
+
+    # Рівні квантування
+    quantize_levels = np.arange(np.min(quantized_signal), np.max(quantized_signal) + delta, delta)
+
+    # Бітове представлення
+    n_bits = int(np.log2(M))
+    quantize_bit = [format(bits, '0' + str(n_bits) + 'b') for bits in range(M)]
+
+    # Таблиця квантування
+    quantize_table = np.column_stack((quantize_levels[:M], quantize_bit[:M]))
+
+    # Побудова таблиці
+    fig, ax = plt.subplots(figsize=(14 / 2.54, M / 2.54))
+    table = ax.table(cellText=quantize_table,
+                     colLabels=['Значення сигналу', 'Кодова послідовність'],
+                     loc='center')
+    table.set_fontsize(14)
+    table.scale(1, 2)
+    ax.axis('off')
+    plt.savefig(f'figures/quantization_table_M{M}.png', dpi=600)
+    plt.close()
+
+    # Перетворення сигналу в бітову послідовність
+    bits = []
+    for signal_value in quantized_signal:
+        for idx, level_value in enumerate(quantize_levels[:M]):
+            if np.round(np.abs(signal_value - level_value), 0) == 0:
+                bits.append(quantize_bit[idx])
+                break
+
+    # Об'єднання бітів в один рядок
+    bits_string = ''.join(bits)
+    bits_list = [int(bit) for bit in bits_string]
+
+    # Побудова графіку бітової послідовності
+    fig, ax = plt.subplots(figsize=(21 / 2.54, 14 / 2.54))
+    x_bits = np.arange(len(bits_list))
+    ax.step(x_bits, bits_list, linewidth=0.5)
+    ax.set_xlabel('Номер біта', fontsize=14)
+    ax.set_ylabel('Значення біта', fontsize=14)
+    ax.set_title(f'Кодова послідовність для M={M}', fontsize=14)
+    ax.set_ylim(-0.1, 1.1)
+    ax.grid(True)
+    plt.savefig(f'figures/bit_sequence_M{M}.png', dpi=600)
+    plt.close()
+
+    # Розрахунок дисперсії та SNR
+    error = quantized_signal - filtered_signal
+    var_error = np.var(error)
+    var_signal = np.var(filtered_signal)
+    variances_q.append(var_error)
+    snr = var_signal / var_error if var_error > 0 else float('inf')
+    snr_values_q.append(snr)
+
+# Графіки цифрових сигналів
+fig, ax = plt.subplots(2, 2, figsize=(21 / 2.54, 14 / 2.54))
+s = 0
+for i in range(2):
+    for j in range(2):
+        ax[i, j].plot(t, quantized_signals[s], linewidth=1)
+        ax[i, j].set_title(f'M = {levels[s]}', fontsize=14)
+        ax[i, j].grid(True)
+        s += 1
+fig.supxlabel('Час (с)', fontsize=14)
+fig.supylabel('Амплітуда', fontsize=14)
+fig.suptitle('Цифрові сигнали (квантовані)', fontsize=14)
+plt.tight_layout()
+plt.savefig('figures/quantized_signals.png', dpi=600)
+plt.show()
+
+# Графік дисперсії від кількості рівнів квантування
+plt.figure(figsize=(21 / 2.54, 14 / 2.54))
+plt.plot(levels, variances_q, 'ro-', linewidth=1)
+plt.xlabel('Кількість рівнів квантування M', fontsize=14)
+plt.ylabel('Дисперсія помилки квантування', fontsize=14)
+plt.title('Залежність дисперсії від M', fontsize=14)
+plt.grid(True)
+plt.savefig('figures/variance_vs_M.png', dpi=600)
+plt.show()
+
+# Графік SNR від кількості рівнів квантування
+plt.figure(figsize=(21 / 2.54, 14 / 2.54))
+plt.plot(levels, snr_values_q, 'bs-', linewidth=1)
+plt.xlabel('Кількість рівнів квантування M', fontsize=14)
+plt.ylabel('Відношення сигнал/шум (SNR)', fontsize=14)
+plt.title('Залежність SNR від M', fontsize=14)
+plt.grid(True)
+plt.savefig('figures/snr_vs_M.png', dpi=600)
+plt.show()
+
+print("=" * 50)
+print("РЕЗУЛЬТАТИ КВАНТУВАННЯ")
+print("=" * 50)
+print(f"{'M':<8} {'Дисперсія':<15} {'SNR':<15}")
+print("-" * 40)
+for i, M in enumerate(levels):
+    print(f"{M:<8} {variances_q[i]:<15.6f} {snr_values_q[i]:<15.2f}")
